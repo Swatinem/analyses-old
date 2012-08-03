@@ -1,0 +1,30 @@
+{
+	"name": "analyses",
+	"description": "ECMAScript static analysis based on esprima",
+	"main": "./index",
+	"bin": {
+		"cfgdot": "./bin/cfgdot.js",
+		"livevariables": "./bin/livevariables.js"
+	},
+	"version": "0.0.1",
+	"engines": {
+		"node": ">= 0.8.0"
+	},
+	"maintainers": [{
+		"name": "Arpad Borsos",
+		"email": "arpad.borsos@googlemail.com",
+		"web": "http://swatinem.de"
+	}],
+	"dependencies": {
+		"esprima": ">= 0.9.9",
+		"escodegen": ">= 0.0.4",
+		"debug": ">= 0.7.0"
+	},
+	"devDependencies": {
+		"mocha": ">= 1.2.2",
+		"should": ">= 0.6.3"
+	},
+	"scripts": {
+		"test": "./node_modules/.bin/mocha -r should"
+	}
+}

@@ -1,0 +1,11 @@
+# CFA goals:
+- update a functions scope parameter once something in that environment changes
+- make a diff of the environment to apply on a function call
+
+# stdlib:
+- stdlib, like Function.prototype etc.
+- node style require()
+
+# js enumlation:
+✔ use property descriptors
+	- clean up the Configurable, Writable, etc handling
