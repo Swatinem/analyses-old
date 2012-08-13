@@ -20,11 +20,11 @@ function createTest(file) {
 }
 
 describe('Acceptance', function () {
-	// FIXME: disable for now as we get console.log()s all over the place
 	var tests = [
-		//'lib/index.js',
-		//'node_modules/esprima/esprima.js',
-		//'test/acceptance.js'
+		'lib/index.js',
+		'lib/controlflowgraph.js',
+		'node_modules/esprima/esprima.js',
+		'test/acceptance.js'
 	];
 	tests.forEach(createTest);
 });
