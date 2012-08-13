@@ -9,7 +9,7 @@ function createTest(dir, file) {
 	var ast = esprima.parse(contents, {comment: true});
 	var comments = ast.comments;
 	delete ast.comments;
-	it(comments[0].value.trim() + ' (' + file + ')', function () {
+	it(comments[0].value + ' (' + file + ')', function () {
 		if (ast.body[0].type === 'FunctionDeclaration')
 			ast = ast.body[0].body;
 		var cfg = ControlFlowGraph(ast);

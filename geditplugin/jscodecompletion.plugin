@@ -1,0 +1,9 @@
+[Plugin]
+Module=jscodecompletion
+Loader=python
+IAge=3
+Name=Code Completion for JavaScript
+Description=This plugin provides advanced code completion for javascript code.
+Authors=Arpad Borsos <arpad.borsos@googlemail.com>
+Copyright=Copyright © 2011 Arpad Borsos
+Website=http://gedit.swatinem.de/
