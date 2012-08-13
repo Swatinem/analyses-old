@@ -1,14 +1,17 @@
-LIB_FILES := $(shell find lib/ -type f -name '*.js')
-TEST_FILES := $(shell find test/ -type f -name '*.js')
+install-plugin:
+	npm install -d
+	mkdir -p ~/.local/share/gedit/plugins/
+	cp -a geditplugin/* ~/.local/share/gedit/plugins/
+	cp -a ./ ~/.local/share/gedit/plugins/jscodecompletion/js/
+	rm -r ~/.local/share/gedit/plugins/jscodecompletion/js/test
+	rm -r ~/.local/share/gedit/plugins/jscodecompletion/js/geditplugin
 
 test:
 	@./node_modules/.bin/mocha -r should
 
 .PHONY: test coverage
 
-coverage: coverage.html
-
-coverage.html: $(LIB_FILES) $(TEST_FILES)
-	@jscoverage lib lib-cov
-	@ANALYSIS_COV=1 ./node_modules/.bin/mocha -r should -R html-cov > coverage.html || true
+coverage:
+	@jscoverage --no-highlight lib lib-cov
+	@ANALYSIS_COV=1 ./node_modules/.bin/mocha -r should -R html-cov > coverage.html
 	@rm -rf lib-cov

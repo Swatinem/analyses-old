@@ -1,11 +1,24 @@
-# CFA goals:
-- update a functions scope parameter once something in that environment changes
-- make a diff of the environment to apply on a function call
+✔ recursion
+	- still failing for doctor.js/test166.js
+	- 'object's never .equals()
+✔ proper Array with numProps
+✔ difference between setProp and getProp
+✔ better implicit .prototype creation
 
-# stdlib:
-- stdlib, like Function.prototype etc.
-- node style require()
+- exact ForInStatement
+	- needs non-enumerable properties
+✔ isTruthy/Falsy for ConditionalExpression, || and &&, !, `in`
+	- testing truthfullness for 0 numbers would break doctor.js tests
+✔ record values in each Expression node for autocompletion
+	✔ getPropNames for Value/Reference
+	- this is done for objects of MemberExpressions only for now
+- difference between `undefined` and `any`
+✔ Exceptions
+	✔ return a tuple of retVal, throwVal
 
-# js enumlation:
-✔ use property descriptors
-	- clean up the Configurable, Writable, etc handling
+✔ Global object for `this`
+- new with return
+- Other stdlib improvements
+	- JSON
+	- ES5 Object functions
+	- ES5 Array extras
