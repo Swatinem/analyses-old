@@ -55,8 +55,42 @@ rep.on('message', function (message) {
 		// rewind the cursor to the last non-whitespace
 		offset = rewindWhitespace(source, offset);
 		
+		function nameSort(a, b) {
+			return a.toLowerCase().localeCompare(b.toLowerCase());
+		}
+
+		function tryScope(recurse, stop) {
+			// try to recurse into one of the statements. if none has stopped the
+			// walk, go and complete the local vars up to the top of the stack
+			if (this.body.forEach)
+				this.body.forEach(recurse);
+			else
+				recurse(this.body);
+
+			if (!this.frame) {
+				return;
+			}
+			var result = [];
+			function add(frame) {
+				//if (!frame.vars)
+				//	return;
+				result = result.concat(Object.keys(frame.vars).map(function (v) {
+					return v.substring(0, v.length - 1);
+				}).filter(function (v) {
+					return !~result.indexOf(v);
+				}).sort(nameSort));
+			}
+			var frame = this.frame;
+			do {
+				add(frame);
+			} while (frame = frame.parent);
+
+			send(result);
+			stop();
+		}
+
 		// see if we are completing a `MemberExpression`
-		var sent = false;
+		inferTypes(ast); // no return val, this modifies the ast in-place
 		walker(ast, {
 			MemberExpression: function (recurse, stop) {
 				// recurse into the object
@@ -66,7 +100,6 @@ rep.on('message', function (message) {
 				if (this.computed)
 					return recurse(this.property);
 
-				inferTypes(ast); // no return val, this modifies the ast in-place
 				var props = this.object.val.getPropNames();
 				// props is an array of propnames, each one for the prototype chain/probable objects
 				// FIXME: better recovery when the cursor position is at obj.|
@@ -75,44 +108,16 @@ rep.on('message', function (message) {
 					result = result.concat(
 						propnames.filter(function (name) {
 							return name !== 'ő' && !~result.indexOf(name);
-							}).sort());
+							}).sort(nameSort));
 				});
 				send(result);
-				sent = true;
 				stop();
-			}
+			},
+			Program: tryScope,
+			FunctionExpression: tryScope,
+			FunctionDeclaration: tryScope
 		}, offset);
-		if (sent)
-			return;
-
-		// go through the ranges and unshift them, so we get matching scopes in
-		// order from lowest to highest
-		var scopes = [];
-		function checkScope(scope) {
-			if (!scope.range || (scope.range[0] <= offset && scope.range[1] > offset)) {
-				scopes.unshift(scope.variables);
-				scope.scopes.forEach(checkScope);
-			}
-		}
-		/*var vars = findVars(ast);
-		delete vars.range; // the range for `Program` is off
-		checkScope(vars);
-		// make sure that these two are available in every function scope
-		if (scopes.length > 1)
-			scopes.splice(1, 0, ['this', 'arguments']);*/
-		// add all the stdlib globals
-		scopes.push(Object.keys(stdlib));
-
-		// FIXME: remove duplicate code once we don’t need the ő hack any more
-		var result = [];
-		scopes.forEach(function (propnames) {
-			result = result.concat(
-				propnames.filter(function (name) {
-					return !~result.indexOf(name);
-					}).sort());
-		});
-
-		send(result);
+		//send({error: 'unreached'});
 	} catch (e) {
 		send({error: e.stack});
 	}

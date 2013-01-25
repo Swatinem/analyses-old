@@ -23,7 +23,8 @@ class CodeCompleteProvider(GObject.Object, GtkSource.CompletionProvider):
 		(bufferstart, bufferend) = buffer.get_bounds()
 		code = buffer.get_text(bufferstart, bufferend, False);
 		self.socket.send_json({'source': code, 'offset': iter.get_offset(), 'filename': filename})
-		result = json.loads(self.socket.recv())
+		raw = self.socket.recv()
+		result = json.loads(raw)
 		if type(result) == dict and 'error' in result:
 			print result
 			return []
