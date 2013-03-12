@@ -20,7 +20,7 @@ var skip = [
 	// let:
 	208, 209, 210, 211, 212, 213, 216, 222, 226,
 	// syntax errors:
-	84, 218, 219,
+	84, 85, 218, 219,
 	// wrong per http://es5.github.com/#x13.2.2: new can only return objects
 	10,
 	// we are actually better here:
