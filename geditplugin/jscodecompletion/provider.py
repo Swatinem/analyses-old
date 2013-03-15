@@ -43,24 +43,10 @@ class CodeCompleteProvider(GObject.Object, GtkSource.CompletionProvider):
 			context.add_proposals(self, [], True)
 			return
 
-		# do not rescan if we are still typing the same identifier as on the last
-		# request
-		if self.lastIdentifier == None or not start.equal(self.lastIdentifier):
-			#self.lastIdentifier = start;
-			self.lastResult = self.analyze(iter)
-		result = self.lastResult
-		
-		"""
-		# do not start interactive if the typed word is inside the completion list
-		if (context.get_activation() == GtkSource.CompletionActivation.INTERACTIVE
-		    and text in result):
-			context.add_proposals(self, [], True)
-			return
-		"""
+		result = self.analyze(iter)
 
 		proposals = []
-		vars = [var for var in result if text in var and text != var]
-		for var in vars:
+		for var in result:
 			proposals.append(GtkSource.CompletionItem.new(var, var, None, None))
 
 		context.add_proposals(self, proposals, True)
