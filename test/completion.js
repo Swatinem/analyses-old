@@ -121,7 +121,52 @@ describe('Completion', function () {
 	});
 
 	describe('autocompletion', function () {
-		it('should gracefully handle syntax errors');
-		it('should complete global variables');
+		it('should return empty when in comments', function () {
+			var c = new Completion({
+				source: '/* foo */'
+			});
+			var res = c.complete(3);
+			res.should.be.empty;
+		});
+
+		it('should return empty when in literals', function () {
+			var c = new Completion({
+				source: '" string "'
+			});
+			var res = c.complete(3);
+			res.should.be.empty;
+		});
+
+		it('should gracefully handle syntax errors', function () {
+			var c = new Completion({
+				source: 'var o = {a: 1};\nif (o.) {}'
+			});
+			var res = c.complete(22);
+			res.should.includeEql('a');
+		});
+
+		it('should complete global variables', function () {
+			var c = new Completion({
+				source: '\nvar a;'
+			});
+			var res = c.complete(0);
+			res.should.includeEql('a');
+		});
+
+		it('should sort based on fuzzy matching', function () {
+			var c = new Completion({
+				source: 'var o = {propa: 1, propb: 2, porpa: 3};\no.pra'
+			});
+			var res = c.complete(c.source.length - 1);
+			res.should.eql(['propa', 'porpa']);
+		});
+
+		it('should sort based on depth', function () {
+			var c = new Completion({
+				source: 'var identa;\na();\nfunction a() { var identb; ide}'
+			});
+			var res = c.complete(c.source.length - 2);
+			res.should.eql(['identb', 'identa']);
+		});
 	});
 });

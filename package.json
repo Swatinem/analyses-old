@@ -17,6 +17,7 @@
 	"dependencies": {
 		"esprima": ">= 0.9.9",
 		"escodegen": "*",
+		"fuzzy": "*",
 		"zmq": ">= 2.0.1"
 	},
 	"devDependencies": {
