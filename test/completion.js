@@ -179,6 +179,23 @@ describe('Completion', function () {
 			res.should.includeEql('arg2');
 		});
 
+		it('should not include the same var multiple times', function () {
+			var c = new Completion({
+				source: 'function a() {function foo(a) {\n}}'
+			});
+			var res = c.complete(c.source.length - 2);
+			var numA = 0;
+			var numArguments = 0;
+			res.forEach(function (v) {
+				if (v == 'a')
+					numA++;
+				if (v == 'arguments')
+					numArguments++;
+			});
+			numA.should.eql(1);
+			numArguments.should.eql(1);
+		});
+
 		it('should not complete function scope right after the closing bracket', function () {
 			var c = new Completion({
 				source: 'function a(arg1, arg2) {\n}'
