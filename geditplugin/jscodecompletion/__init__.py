@@ -6,10 +6,26 @@ import os
 
 THISDIR = os.path.dirname(os.path.realpath(__file__))
 SOCK = 7331
+DATA_KEY = 'JSComplete'
 
-activeProviders = 0
-analysisprocess = None
-manager = WebSocketManager()
+class CodeCompleteAppActivatable(GObject.Object, Gedit.AppActivatable):
+	app = GObject.property(type=Gedit.App)
+
+	def __init__(self):
+		GObject.Object.__init__(self)
+
+	def do_activate(self):
+		self.analysis = Popen([THISDIR + '/js/bin/completionserver.js', str(SOCK)], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+		self.analysis.stdout.readline()
+		self.manager = WebSocketManager()
+		self.manager.start()
+		self.app.set_data(DATA_KEY, self);
+
+	def do_deactivate(self):
+		self.analysis.kill()
+		self.manager.close_all()
+		self.manager.stop()
+		self.manager.join()
 
 class CodeCompleteViewActivatable(GObject.Object, Gedit.ViewActivatable):
 	view = GObject.property(type=Gedit.View)
@@ -30,28 +46,14 @@ class CodeCompleteViewActivatable(GObject.Object, Gedit.ViewActivatable):
 		on_language_change(None, None)
 
 	def enable(self):
-		global activeProviders, analysisprocess, manager
-		activeProviders += 1
-		if activeProviders == 1:
-			manager.start()
-			analysisprocess = Popen([THISDIR + '/js/bin/completionserver.js', str(SOCK)], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-			analysisprocess.stdout.readline()
 		completion = self.view.get_completion()
-		self.provider = CodeCompleteProvider(SOCK, manager)
+		app = Gedit.App.get_default()
+		self.provider = CodeCompleteProvider(SOCK, app.get_data(DATA_KEY).manager)
 		completion.add_provider(self.provider)
 
 	def do_deactivate(self):
-		global activeProviders, analysisprocess, manager
 		if self.provider != None:
 			completion = self.view.get_completion()
 			completion.remove_provider(self.provider)
 			self.provider = None
-			activeProviders -= 1
-			if activeProviders == 0:
-				manager.close_all()
-				manager.stop()
-				manager.join()
-				manager = None
-				analysisprocess.kill()
-				analysisprocess = None
 
