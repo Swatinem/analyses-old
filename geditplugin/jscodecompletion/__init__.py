@@ -6,26 +6,42 @@ import os
 
 THISDIR = os.path.dirname(os.path.realpath(__file__))
 SOCK = 7331
-DATA_KEY = 'JSComplete'
 
 class CodeCompleteAppActivatable(GObject.Object, Gedit.AppActivatable):
 	app = GObject.property(type=Gedit.App)
 
 	def __init__(self):
+		self.viewCount = 0
+		self.analysis = None
 		GObject.Object.__init__(self)
 
 	def do_activate(self):
+		self.app.app = self
+	def do_deactivate(self):
+		pass
+
+	def start(self):
 		self.analysis = Popen([THISDIR + '/js/bin/completionserver.js', str(SOCK)], stdin=PIPE, stdout=PIPE, stderr=PIPE)
 		self.analysis.stdout.readline()
 		self.manager = WebSocketManager()
 		self.manager.start()
-		self.app.set_data(DATA_KEY, self);
 
-	def do_deactivate(self):
+	def stop(self):
 		self.analysis.kill()
 		self.manager.close_all()
 		self.manager.stop()
 		self.manager.join()
+		self.analysis = None
+		self.manager = None
+
+	def add_view(self):
+		self.viewCount += 1
+		if self.viewCount == 1 and self.analysis == None:
+			self.start()
+	def remove_view(self):
+		self.viewCount -= 1
+		if self.viewCount == 0:
+			self.stop()
 
 class CodeCompleteViewActivatable(GObject.Object, Gedit.ViewActivatable):
 	view = GObject.property(type=Gedit.View)
@@ -33,6 +49,10 @@ class CodeCompleteViewActivatable(GObject.Object, Gedit.ViewActivatable):
 	def __init__(self):
 		GObject.Object.__init__(self)
 		self.provider = None
+
+	def app(self):
+		app = Gedit.App.get_default().app
+		return app
 
 	def do_activate(self):
 		buffer = self.view.get_buffer()
@@ -46,9 +66,9 @@ class CodeCompleteViewActivatable(GObject.Object, Gedit.ViewActivatable):
 		on_language_change(None, None)
 
 	def enable(self):
+		self.app().add_view()
 		completion = self.view.get_completion()
-		app = Gedit.App.get_default()
-		self.provider = CodeCompleteProvider(SOCK, app.get_data(DATA_KEY).manager)
+		self.provider = CodeCompleteProvider(SOCK, self.app().manager)
 		completion.add_provider(self.provider)
 
 	def do_deactivate(self):
@@ -56,4 +76,5 @@ class CodeCompleteViewActivatable(GObject.Object, Gedit.ViewActivatable):
 			completion = self.view.get_completion()
 			completion.remove_provider(self.provider)
 			self.provider = None
+			self.app().remove_view()
 
