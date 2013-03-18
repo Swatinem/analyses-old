@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
-var esprima = require('esprima'),
-    lib = require('../'),
-    zmq = require('zmq');
+var esprima = require('esprima')
+  , lib = require('../')
+  , WebSocketServer = require('ws').Server
+  , http = require('http');
 
 var sock = process.argv[2];
 if (!sock) {
@@ -10,25 +11,25 @@ if (!sock) {
 	process.exit(1);
 }
 
-var rep = zmq.socket('rep');
+var server = http.createServer();
+var wss = new WebSocketServer({server: server});
 
-function send(obj) {
-	rep.send(JSON.stringify(obj || []));
-}
+wss.on('connection', function(ws) {
+	ws.on('message', function(message) {
+		var msg = JSON.parse(message);
+		var source = msg.source || '';
+		var offset = msg.offset || 0;
+		var filename = msg.filename;
 
-rep.on('message', function (message) {
-	var msg = JSON.parse(message);
-	var source = msg.source || '';
-	var offset = msg.offset || 0;
-	var filename = msg.filename;
-
-	var completer = new lib.Completion({
-		source: source,
-		filename: filename
+		var completer = new lib.Completion({
+			source: source,
+			filename: filename
+		});
+		var results = completer.complete(offset);
+		ws.send(JSON.stringify(results));
 	});
-	send(completer.complete(offset));
 });
 
-rep.bind(sock, function () {
-	console.log('listening on '+ sock);
+server.listen(sock, function () {
+	console.log('Listening on %s', sock);
 });

@@ -1,13 +1,28 @@
 # coding=utf8
-from gi.repository import GObject, GtkSource
+from gi.repository import GObject, GtkSource, GLib
+from ws4py.client import WebSocketBaseClient
 import json
-import zmq
+import types
+
+class CompleteClient(WebSocketBaseClient):
+	def __init__(self, socket, manager, provider):
+		self.manager = manager
+		self.provider = provider
+		WebSocketBaseClient.__init__(self, socket)
+	def handshake_ok(self):
+		self.manager.add(self)
+	def received_message(self, msg):
+		results = json.loads(str(msg))
+		# received_message is called in a different thread
+		# so make sure that provider.do_result is called in the main thread
+		GLib.idle_add(self.provider.do_result, results)
 
 class CodeCompleteProvider(GObject.Object, GtkSource.CompletionProvider):
-	def __init__(self, socket, context):
-		self.socket = context.socket(zmq.REQ)
-		self.socket.connect(socket)
-		self.lastIdentifier = None
+	def __init__(self, socket, manager):
+		self.manager = manager
+		socket = 'ws://localhost:%s' % socket
+		self.client = CompleteClient(socket, manager, self)
+		self.client.connect()
 		GObject.Object.__init__(self)
 
 	def do_get_name(self):
@@ -22,16 +37,16 @@ class CodeCompleteProvider(GObject.Object, GtkSource.CompletionProvider):
 			filename = file.get_path()
 		(bufferstart, bufferend) = buffer.get_bounds()
 		code = buffer.get_text(bufferstart, bufferend, False);
-		self.socket.send_json({'source': code, 'offset': iter.get_offset(), 'filename': filename})
-		raw = self.socket.recv()
-		result = json.loads(raw)
-		if type(result) == dict and 'error' in result:
-			print result
-			return []
-		else:
-			return result
+		self.client.send(json.dumps({'source': code, 'offset': iter.get_offset(), 'filename': filename}))
+
+	def do_result(self, results):
+		proposals = []
+		for var in results:
+			proposals.append(GtkSource.CompletionItem.new(var, var, None, None))
+		self.context.add_proposals(self, proposals, True)
 
 	def do_populate(self, context):
+		self.context = context
 		iter = context.get_iter()
 		
 		[start, end] = findIdentifier(context.get_iter())
@@ -43,15 +58,9 @@ class CodeCompleteProvider(GObject.Object, GtkSource.CompletionProvider):
 			context.add_proposals(self, [], True)
 			return
 
-		result = self.analyze(iter)
+		self.analyze(iter)
+		return
 
-		proposals = []
-		for var in result:
-			proposals.append(GtkSource.CompletionItem.new(var, var, None, None))
-
-		context.add_proposals(self, proposals, True)
-
-	
 	#def do_get_start_iter(self, context, proposal, iter):
 	#	[start, end] = findIdentifier(context.get_iter())
 	#	if not start.equal(end):
