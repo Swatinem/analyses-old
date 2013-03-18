@@ -157,7 +157,7 @@ describe('Completion', function () {
 			var c = new Completion({
 				source: 'var o = {propa: 1, propb: 2, porpa: 3};\no.pra'
 			});
-			var res = c.complete(c.source.length - 1);
+			var res = c.complete(c.source.length);
 			res.should.eql(['propa', 'porpa']);
 		});
 
@@ -165,8 +165,28 @@ describe('Completion', function () {
 			var c = new Completion({
 				source: 'var identa;\na();\nfunction a() { var identb; ide}'
 			});
-			var res = c.complete(c.source.length - 2);
+			var res = c.complete(c.source.length - 1);
 			res.should.eql(['identb', 'identa']);
+		});
+
+		it('should complete function arguments', function () {
+			var c = new Completion({
+				source: 'function a(arg1, arg2) {\n}'
+			});
+			var res = c.complete(c.source.length - 1);
+			res.should.includeEql('arguments');
+			res.should.includeEql('arg1');
+			res.should.includeEql('arg2');
+		});
+
+		it('should not complete function scope right after the closing bracket', function () {
+			var c = new Completion({
+				source: 'function a(arg1, arg2) {\n}'
+			});
+			var res = c.complete(c.source.length);
+			res.should.not.includeEql('arguments');
+			res.should.not.includeEql('arg1');
+			res.should.not.includeEql('arg2');
 		});
 	});
 });
