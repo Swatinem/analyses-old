@@ -102,6 +102,12 @@ describe('Completion', function () {
 			c._identifierAt(9).should.include({value: 'ident', range: [4, 9]});
 			should.not.exist(c._identifierAt(10));
 		});
+		it('should find the identifiers exactly when not in MemberExpressions', function () {
+			var c = new Completion({
+				source: 'id1\n\n\n\n\nid2'
+			});
+			should.not.exist(c._identifierAt(4));
+		});
 	});
 
 	it('should fix stale dots in a statement', function () {
