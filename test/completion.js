@@ -2,6 +2,12 @@ var should = require('should');
 
 var Completion = require('../').Completion;
 
+function includes(res, identifier) {
+	return res.some(function (v) {
+		return v.identifier == identifier;
+	});
+}
+
 describe('Completion', function () {
 	it('should automatically convert hashbangs', function () {
 		var c = new Completion({
@@ -148,7 +154,7 @@ describe('Completion', function () {
 				source: 'var o = {a: 1};\nif (o.) {}'
 			});
 			var res = c.complete(22);
-			res.should.includeEql('a');
+			includes(res, 'a').should.be.ok;
 		});
 
 		it('should complete global variables', function () {
@@ -156,7 +162,7 @@ describe('Completion', function () {
 				source: '\nvar a;'
 			});
 			var res = c.complete(0);
-			res.should.includeEql('a');
+			includes(res, 'a').should.be.ok;
 		});
 
 		it('should sort based on fuzzy matching', function () {
@@ -164,7 +170,8 @@ describe('Completion', function () {
 				source: 'var o = {propa: 1, propb: 2, porpa: 3};\no.pra'
 			});
 			var res = c.complete(c.source.length);
-			res.should.eql(['propa', 'porpa']);
+			res[0].should.include({identifier: 'propa'});
+			res[1].should.include({identifier: 'porpa'});
 		});
 
 		it('should sort based on depth', function () {
@@ -172,7 +179,8 @@ describe('Completion', function () {
 				source: 'var identa;\na();\nfunction a() { var identb; ide}'
 			});
 			var res = c.complete(c.source.length - 1);
-			res.should.eql(['identb', 'identa']);
+			res[0].should.include({identifier: 'identb'});
+			res[1].should.include({identifier: 'identa'});
 		});
 
 		it('should complete function arguments', function () {
@@ -180,9 +188,9 @@ describe('Completion', function () {
 				source: 'function a(arg1, arg2) {\n}'
 			});
 			var res = c.complete(c.source.length - 1);
-			res.should.includeEql('arguments');
-			res.should.includeEql('arg1');
-			res.should.includeEql('arg2');
+			includes(res, 'arguments').should.be.ok;
+			includes(res, 'arg1').should.be.ok;
+			includes(res, 'arg2').should.be.ok;
 		});
 
 		it('should not include the same var multiple times', function () {
@@ -193,9 +201,9 @@ describe('Completion', function () {
 			var numA = 0;
 			var numArguments = 0;
 			res.forEach(function (v) {
-				if (v == 'a')
+				if (v.identifier == 'a')
 					numA++;
-				if (v == 'arguments')
+				if (v.identifier == 'arguments')
 					numArguments++;
 			});
 			numA.should.eql(1);
@@ -207,9 +215,9 @@ describe('Completion', function () {
 				source: 'function a(arg1, arg2) {\n}'
 			});
 			var res = c.complete(c.source.length);
-			res.should.not.includeEql('arguments');
-			res.should.not.includeEql('arg1');
-			res.should.not.includeEql('arg2');
+			includes(res, 'arguments').should.not.be.ok;
+			includes(res, 'arg1').should.not.be.ok;
+			includes(res, 'arg2').should.not.be.ok;
 		});
 	});
 });

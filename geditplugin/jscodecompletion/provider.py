@@ -43,6 +43,8 @@ class CodeCompleteProvider(GObject.Object, GtkSource.CompletionProvider):
 		proposals = []
 		for var in results:
 			proposals.append(GtkSource.CompletionItem.new(var, var, None, None))
+		# FIXME: there are still assertions like
+		# GtkSourceView-CRITICAL **: _gtk_source_completion_add_proposals: assertion `completion->priv->context == context' failed
 		self.context.add_proposals(self, proposals, True)
 
 	def do_populate(self, context):
