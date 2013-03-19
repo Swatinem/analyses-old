@@ -37,6 +37,8 @@ wss.on('connection', function (ws) {
 					filename: msg.filename
 				});
 			break;
+			// FIXME: gedit emits `remove` and `insert` events, maybe those are
+			// better suited than a generic `change` event?
 			case 'change':
 				if (!completer)
 					return send(new Error('Completer not initialized'));
@@ -45,22 +47,15 @@ wss.on('connection', function (ws) {
 			case 'complete':
 				if (!completer)
 					return send(new Error('Completer not initialized'));
-				send(completer.complete(msg.offset || 0));
+				var result = completer.complete(msg.offset || 0);
+				send(result);
 			break;
-			case undefined: // backwards compat, for now
-				var source = msg.source || '';
-				var offset = msg.offset || 0;
-				var filename = msg.filename;
-
-				completer = new lib.Completion({
-					source: source,
-					filename: filename
-				});
-				var results = completer.complete(offset);
-				send(results.map(function (res) { return res.identifier; }));
-			break;
+			default:
+				throw new Error('Unknown request, must be `new`, `change` or `complete`');
 		}
 		} catch (e) {
+			console.log(e); // FIXME: better logging, it currently clogs up the
+			// output buffer because gedit never reads from the child process
 			send(e);
 		}
 	});

@@ -68,7 +68,7 @@ class CodeCompleteViewActivatable(GObject.Object, Gedit.ViewActivatable):
 	def enable(self):
 		self.app().add_view()
 		completion = self.view.get_completion()
-		self.provider = CodeCompleteProvider(SOCK, self.app().manager)
+		self.provider = CodeCompleteProvider(SOCK, self.app().manager, self.view)
 		completion.add_provider(self.provider)
 
 	def do_deactivate(self):

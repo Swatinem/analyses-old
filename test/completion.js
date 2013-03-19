@@ -183,6 +183,17 @@ describe('Completion', function () {
 			res[1].should.include({identifier: 'identa'});
 		});
 
+		it('should sort function arguments above global vars', function () {
+			var c = new Completion({
+				source: 'var abc1;\n(function (abc2, zzz) { var local;})()'
+			});
+			var res = c.complete(c.source.length - 4);
+			res[0].should.include({identifier: 'abc2'});
+			// 1 = arguments, 2 = local
+			res[3].should.include({identifier: 'zzz'});
+			res[4].should.include({identifier: 'abc1'});
+		});
+
 		it('should complete function arguments', function () {
 			var c = new Completion({
 				source: 'function a(arg1, arg2) {\n}'

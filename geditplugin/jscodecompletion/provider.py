@@ -13,23 +13,44 @@ class CompleteClient(WebSocketBaseClient):
 		self.manager.add(self)
 	def received_message(self, msg):
 		results = json.loads(str(msg))
+		if type(results) == dict and 'error' in results:
+			results = [] # TODO: we don’t handle any errors yet
 		# received_message is called in a different thread
 		# so make sure that provider.do_result is called in the main thread
 		GLib.idle_add(self.provider.do_result, results)
 
 class CodeCompleteProvider(GObject.Object, GtkSource.CompletionProvider):
-	def __init__(self, socket, manager):
+	def __init__(self, socket, manager, view):
 		self.manager = manager
 		socket = 'ws://localhost:%s' % socket
 		self.client = CompleteClient(socket, manager, self)
 		self.client.connect()
+		self.view = view
+		self.connect_buffer()
 		GObject.Object.__init__(self)
 
-	def do_get_name(self):
-		return "JavaScript code completion"
-
-	def analyze(self, iter):
-		buffer = iter.get_buffer()
+	def connect_buffer(self):
+		buffer = self.view.get_buffer()
+		send = lambda o: self.client.send(json.dumps(o))
+		# connect the buffer change events
+		def delete_range(buffer, start, end):
+			start = start.get_offset()
+			send({
+				'type': 'change',
+				'offset': start,
+				'remove': end.get_offset() - start,
+				'add': ''
+			})
+		buffer.connect('delete-range', delete_range)
+		def insert_text(buffer, offset, text, length):
+			send({
+				'type': 'change',
+				'offset': offset.get_offset(),
+				'remove': 0,
+				'add': text
+			})
+		buffer.connect('insert-text', insert_text)
+		# and send off the initial buffer
 		file = buffer.get_location()
 		if file == None:
 			filename = None
@@ -37,12 +58,22 @@ class CodeCompleteProvider(GObject.Object, GtkSource.CompletionProvider):
 			filename = file.get_path()
 		(bufferstart, bufferend) = buffer.get_bounds()
 		code = buffer.get_text(bufferstart, bufferend, False);
-		self.client.send(json.dumps({'source': code, 'offset': iter.get_offset(), 'filename': filename}))
+		send({
+			'type': 'new',
+			'source': code,
+			'filename': filename
+		});
+
+	def do_get_name(self):
+		return "JavaScript code completion"
+
+	def analyze(self, iter):
+		self.client.send(json.dumps({'type': 'complete', 'offset': iter.get_offset()}))
 
 	def do_result(self, results):
 		proposals = []
-		for var in results:
-			proposals.append(GtkSource.CompletionItem.new(var, var, None, None))
+		for res in results:
+			proposals.append(GtkSource.CompletionItem.new_with_markup(res['markup'], res['identifier'], None, res['info']))
 		# FIXME: there are still assertions like
 		# GtkSourceView-CRITICAL **: _gtk_source_completion_add_proposals: assertion `completion->priv->context == context' failed
 		self.context.add_proposals(self, proposals, True)
