@@ -110,16 +110,6 @@ class CodeCompleteProvider(GObject.Object, GtkSource.CompletionProvider):
 		buffer.insert(start, proposal.get_text())
 		return True
 
-def dotBefore(iter):
-	iter = iter.copy()
-	if iter.get_char() == '.':
-		return True
-	iter.backward_char()
-	while iter.get_char().isspace():
-		if not iter.backward_char():
-			break
-	return iter.get_char() == '.'
-
 def findIdentifier(iter):
 	identifierchar = lambda char: (char.isdigit() or char.isalpha() or char == '$' or char == '_')
 
