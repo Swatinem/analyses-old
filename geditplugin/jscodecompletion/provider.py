@@ -67,9 +67,6 @@ class CodeCompleteProvider(GObject.Object, GtkSource.CompletionProvider):
 	def do_get_name(self):
 		return "JavaScript code completion"
 
-	def analyze(self, iter):
-		self.client.send(json.dumps({'type': 'complete', 'offset': iter.get_offset()}))
-
 	def do_result(self, results):
 		proposals = []
 		for res in results:
@@ -86,13 +83,16 @@ class CodeCompleteProvider(GObject.Object, GtkSource.CompletionProvider):
 		text = start.get_text(end)
 		
 		# do not start interactive with identifiers < 2
-		if (context.get_activation() == GtkSource.CompletionActivation.INTERACTIVE
-		    and len(text) < 2):
+		interactive = context.get_activation() == GtkSource.CompletionActivation.INTERACTIVE
+		if interactive and len(text) < 2:
 			context.add_proposals(self, [], True)
 			return
 
-		self.analyze(iter)
-		return
+		self.client.send(json.dumps({
+			'type': 'complete',
+			'offset': iter.get_offset(),
+			'interactive': interactive
+		}))
 
 	#def do_get_start_iter(self, context, proposal, iter):
 	#	[start, end] = findIdentifier(context.get_iter())

@@ -230,5 +230,13 @@ describe('Completion', function () {
 			includes(res, 'arg1').should.not.be.ok;
 			includes(res, 'arg2').should.not.be.ok;
 		});
+
+		it('should not add the sole term interactively', function () {
+			var c = new Completion({
+				source: 'function a() {arguments\n}'
+			});
+			var res = c.complete(c.source.length - 2, {interactive: true});
+			res.should.be.empty;
+		});
 	});
 });

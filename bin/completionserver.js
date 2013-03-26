@@ -47,7 +47,9 @@ wss.on('connection', function (ws) {
 			case 'complete':
 				if (!completer)
 					return send(new Error('Completer not initialized'));
-				var result = completer.complete(msg.offset || 0);
+				var result = completer.complete(msg.offset || 0, {
+					interactive: msg.interactive
+				});
 				send(result);
 			break;
 			default:
