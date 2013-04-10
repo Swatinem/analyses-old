@@ -247,5 +247,13 @@ describe('Completion', function () {
 			var res = c.complete(c.source.length - 2, {interactive: true});
 			res.should.be.empty;
 		});
+
+		it('should not suggest numerical properties', function () {
+			var c = new Completion({
+				source: '[1,2,3].'
+			});
+			var res = c.complete(c.source.length);
+			includes(res, '0').should.not.be.ok;
+		});
 	});
 });
