@@ -58,8 +58,17 @@ describe('Completion', function () {
 			});
 			c._inLiteral(0).should.be.false;
 			c._inLiteral(1).should.be.true;
-			c._inLiteral(7).should.be.true;
-			c._inLiteral(8).should.be.false;
+			c._inLiteral(8).should.be.true;
+			c._inLiteral(9).should.be.false;
+		});
+		it('should detect numbers', function () {
+			var c = new Completion({
+				source: '(123).prop'
+			});true
+			c._inLiteral(1).should.be.false;
+			c._inLiteral(2).should.be.true;
+			c._inLiteral(4).should.be.true;
+			c._inLiteral(5).should.be.false;
 		});
 		it('should detect booleans', function () {
 			var c = new Completion({
@@ -67,8 +76,8 @@ describe('Completion', function () {
 			});
 			c._inLiteral(0).should.be.false;
 			c._inLiteral(1).should.be.true;
-			c._inLiteral(3).should.be.true;
-			c._inLiteral(4).should.be.false;
+			c._inLiteral(4).should.be.true;
+			c._inLiteral(5).should.be.false;
 		});
 		it('should detect regexp', function () {
 			var c = new Completion({
@@ -76,8 +85,8 @@ describe('Completion', function () {
 			});
 			c._inLiteral(0).should.be.false;
 			c._inLiteral(1).should.be.true;
-			c._inLiteral(3).should.be.true;
-			c._inLiteral(4).should.be.false;
+			c._inLiteral(4).should.be.true;
+			c._inLiteral(5).should.be.false;
 		});
 	});
 
