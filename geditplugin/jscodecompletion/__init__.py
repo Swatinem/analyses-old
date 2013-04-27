@@ -1,8 +1,10 @@
+import os
+
 from gi.repository import GObject, Gedit
-from provider import CodeCompleteProvider
 from subprocess import Popen, PIPE
 from ws4py.manager import WebSocketManager
-import os
+
+from .provider import CodeCompleteProvider
 
 THISDIR = os.path.dirname(os.path.realpath(__file__))
 SOCK = 7331

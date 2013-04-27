@@ -1,6 +1,6 @@
 [Plugin]
 Module=jscodecompletion
-Loader=python
+Loader=python3
 IAge=3
 Name=Code Completion for JavaScript
 Description=This plugin provides advanced code completion for javascript code.

@@ -12,7 +12,7 @@ class CompleteClient(WebSocketBaseClient):
 	def handshake_ok(self):
 		self.manager.add(self)
 	def received_message(self, msg):
-		results = json.loads(str(msg))
+		results = json.loads(str(msg.__str__(), 'utf8'))
 		if type(results) == dict and 'error' in results:
 			results = [] # TODO: we don’t handle any errors yet
 		# received_message is called in a different thread
