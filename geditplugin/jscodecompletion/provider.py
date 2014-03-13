@@ -22,7 +22,7 @@ class CompleteClient(WebSocketBaseClient):
 class CodeCompleteProvider(GObject.Object, GtkSource.CompletionProvider):
 	def __init__(self, socket, manager, view):
 		self.manager = manager
-		socket = 'ws://localhost:%s' % socket
+		socket = 'ws+unix://%s' % socket
 		self.client = CompleteClient(socket, manager, self)
 		self.client.connect()
 		self.view = view

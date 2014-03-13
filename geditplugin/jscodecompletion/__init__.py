@@ -7,7 +7,8 @@ from ws4py.manager import WebSocketManager
 from .provider import CodeCompleteProvider
 
 THISDIR = os.path.dirname(os.path.realpath(__file__))
-SOCK = 7331
+#SOCK = 7331
+SOCK = THISDIR + '/ws.sock';
 
 class CodeCompleteAppActivatable(GObject.Object, Gedit.AppActivatable):
 	app = GObject.property(type=Gedit.App)
